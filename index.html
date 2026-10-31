@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amul Premium Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            width: 100%;
+        }
+
+        .scroll-container {
+            height: 500vh; /* Make enough room to scroll through frames */
+        }
+
+        .red-dots-top {
+            height: 15px;
+            background-image: radial-gradient(#e31837 40%, transparent 40%);
+            background-size: 20px 20px;
+            background-position: top;
+        }
+
+        .canvas-container {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 0;
+            background-color: #050505;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
+            image-rendering: auto;
+        }
+
+        .noise-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 3rem;
+            margin: 0 0 1rem 0;
+            background: linear-gradient(90deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-weight: 300;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            z-index: 10;
+            background: #050505;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+    </style>
+<script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-background": "#1a1c1c",
+          "on-tertiary-fixed": "#2f1400",
+          "on-primary-container": "#fffbff",
+          "inverse-primary": "#ffb2ba",
+          "tertiary-container": "#a96428",
+          "on-tertiary": "#ffffff",
+          "primary-fixed": "#ffd9dc",
+          "on-secondary-fixed": "#001b3c",
+          "secondary": "#485f84",
+          "surface-container": "#eeeeee",
+          "on-error-container": "#93000a",
+          "outline": "#8b7173",
+          "surface-container-high": "#e9e8e8",
+          "on-error": "#ffffff",
+          "surface-container-highest": "#e3e2e2",
+          "on-secondary-container": "#445a7f",
+          "surface-tint": "#ab2f4a",
+          "background": "#faf9f9",
+          "tertiary-fixed": "#ffdcc4",
+          "surface-container-low": "#f4f3f3",
+          "surface-variant": "#e3e2e2",
+          "error-container": "#ffdad6",
+          "outline-variant": "#debfc1",
+          "on-primary": "#ffffff",
+          "surface-bright": "#faf9f9",
+          "on-surface-variant": "#574143",
+          "primary-container": "#c9465e",
+          "primary": "#a82d47",
+          "primary-fixed-dim": "#ffb2ba",
+          "inverse-on-surface": "#f1f0f0",
+          "secondary-fixed": "#d5e3ff",
+          "secondary-container": "#bbd3fd",
+          "on-surface": "#1a1c1c",
+          "secondary-fixed-dim": "#b0c7f1",
+          "on-tertiary-container": "#fffbff",
+          "on-secondary-fixed-variant": "#30476a",
+          "surface": "#faf9f9",
+          "on-primary-fixed-variant": "#8b1433",
+          "surface-container-lowest": "#ffffff",
+          "tertiary": "#8b4c11",
+          "tertiary-fixed-dim": "#ffb780",
+          "on-secondary": "#ffffff",
+          "inverse-surface": "#2f3131",
+          "error": "#ba1a1a",
+          "surface-dim": "#dadada",
+          "on-primary-fixed": "#400011",
+          "on-tertiary-fixed-variant": "#6f3800"
+        },
+        "borderRadius": {
+          "DEFAULT": "1rem",
+          "lg": "2rem",
+          "xl": "3rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-md": "1rem",
+          "margin": "2rem",
+          "space-sm": "0.5rem",
+          "gutter": "1.5rem",
+          "space-lg": "1.5rem",
+          "space-xs": "0.25rem",
+          "space-xl": "2.5rem"
+        },
+        "fontFamily": {
+          "label-md": ["Plus Jakarta Sans"],
+          "label-sm": ["Plus Jakarta Sans"],
+          "headline-lg": ["Plus Jakarta Sans"],
+          "headline-sm": ["Plus Jakarta Sans"],
+          "headline-md": ["Plus Jakarta Sans"],
+          "body-lg": ["Plus Jakarta Sans"],
+          "body-sm": ["Plus Jakarta Sans"],
+          "headline-xl": ["Plus Jakarta Sans"],
+          "body-md": ["Plus Jakarta Sans"]
+        },
+        "fontSize": {
+          "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+          "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+          "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+          "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+          "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+          "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+          "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+          "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+          "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+        }
+      }
+    }
+  };
+</script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+</head>
+<body>
+    <!-- Hover Trigger for Header -->
+    <div class="fixed top-0 left-0 w-full h-4 z-50 group" style="pointer-events: auto;">
+        <!-- Amul Header -->
+        <header class="absolute top-0 left-0 w-full bg-white shadow-sm font-sans -translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-in-out">
+            <div class="red-dots-top w-full"></div>
+            <div class="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
+                <!-- Hamburger -->
+                <button class="text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                
+                <!-- Nav Links Left -->
+                <nav class="hidden lg:flex space-x-6 text-sm font-bold text-gray-600 tracking-wide">
+                    <a href="#" class="hover:text-amul-red transition">The Story of Amul</a>
+                    <a href="#" class="hover:text-amul-red transition">Our Co-operative</a>
+                    <a href="#" class="hover:text-amul-red transition">Our Products</a>
+                </nav>
+                
+                <!-- Logo -->
+                <div class="text-amul-red text-4xl font-extrabold font-serif tracking-tighter cursor-pointer">Amul</div>
+                
+                <!-- Nav Links Right -->
+                <nav class="hidden lg:flex space-x-6 text-sm font-bold text-gray-600 tracking-wide items-center">
+                    <a href="#" class="hover:text-amul-red transition">Our Topicals</a>
+                    <a href="#" class="hover:text-amul-red transition">Partner with Us <span class="text-xs">▼</span></a>
+                    <a href="#" class="hover:text-amul-red transition">Amul Ecosystem <span class="text-xs">▼</span></a>
+                </nav>
+                
+                <!-- Search and Shop -->
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-800 hover:text-amul-red transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
+                    <a href="#" class="bg-[#e31837] text-white px-6 py-2 rounded-full font-bold hover:bg-red-700 transition shadow-md">Shop Now</a>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div class="loading text-white" id="loader" style="color: white;">Loading Experience... <span id="progress">0%</span></div>
+
+    <div class="scroll-container">
+        <div class="canvas-container">
+            <canvas id="hero-lightpass" width="800" height="600"></canvas>
+            <div class="noise-overlay"></div>
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce text-white z-10">
+                <span class="font-label-md uppercase tracking-widest mb-2">Scroll Down</span>
+                <span class="material-symbols-outlined">arrow_downward</span>
+            </div>
+        </div>
+        <!-- Text overlaid panels have been removed -->
+    </div>
+
+<main class="w-full bg-surface relative z-10 bg-white"><div class="flex flex-col w-full">
+
+        <!-- Red Circular Icons -->
+        <div class="w-full flex justify-center space-x-4 md:space-x-8 mt-16 mb-12 relative">
+            <div class="w-12 h-12 rounded-full border-[1.5px] border-amul-red flex items-center justify-center text-amul-red hover:bg-amul-red hover:text-white transition cursor-pointer"><span class="material-symbols-outlined">water_drop</span></div>
+            <div class="w-12 h-12 rounded-full border-[1.5px] border-amul-red flex items-center justify-center text-amul-red hover:bg-amul-red hover:text-white transition cursor-pointer"><span class="material-symbols-outlined">inventory_2</span></div>
+            <div class="w-12 h-12 rounded-full border-[1.5px] border-amul-red flex items-center justify-center text-amul-red hover:bg-amul-red hover:text-white transition cursor-pointer"><span class="material-symbols-outlined">local_drink</span></div>
+            <div class="w-12 h-12 rounded-full bg-amul-red flex items-center justify-center text-white cursor-pointer shadow-lg"><span class="material-symbols-outlined">trending_up</span></div>
+            <div class="w-12 h-12 rounded-full border-[1.5px] border-amul-red flex items-center justify-center text-amul-red hover:bg-amul-red hover:text-white transition cursor-pointer"><span class="material-symbols-outlined">workspace_premium</span></div>
+            <div class="w-12 h-12 rounded-full border-[1.5px] border-amul-red flex items-center justify-center text-amul-red hover:bg-amul-red hover:text-white transition cursor-pointer"><span class="material-symbols-outlined">front_hand</span></div>
+            <div class="w-12 h-12 rounded-full border-[1.5px] border-amul-red flex items-center justify-center text-amul-red hover:bg-amul-red hover:text-white transition cursor-pointer"><span class="material-symbols-outlined">location_on</span></div>
+        </div>
+
+        <!-- Statistics Section -->
+        <section class="w-full bg-[#e8f1f2] py-20 relative mt-16 font-sans">
+            <!-- SVG Curve for Top -->
+            <div class="absolute top-0 left-0 w-full overflow-hidden leading-none rotate-180" style="transform: translateY(-99%) rotate(180deg);">
+                <svg class="relative block w-full h-[30px] md:h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="#e8f1f2"></path>
+                </svg>
+            </div>
+            
+            <div class="max-w-[1400px] mx-auto px-4 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 text-gray-800">
+                <!-- Column 1 -->
+                <div class="flex flex-col items-center md:items-start text-center md:text-left space-y-4 md:border-r border-gray-400 md:pr-12 md:pl-8">
+                    <div>
+                        <h3 class="text-4xl md:text-[50px] font-bold text-amul-red leading-tight">3.6 million</h3>
+                        <p class="text-xl md:text-2xl text-gray-700 mt-2 font-medium">farmers empowered</p>
+                    </div>
+                    <!-- Illustration Placeholder -->
+                    <div class="mt-8 w-full max-w-[300px] md:self-center">
+                        <img src="farmer_milking.jpg" alt="Farmer milking cow" class="w-full object-contain rounded-xl mix-blend-multiply" onerror="this.src='https://placehold.co/400x300/e8f1f2/e31837?text=Farmer+Illustration'">
+                    </div>
+                </div>
+                
+                <!-- Column 2 -->
+                <div class="flex flex-col justify-center space-y-12 md:border-r border-gray-400 md:px-12">
+                    <div>
+                        <h3 class="text-4xl md:text-[50px] font-bold text-amul-red leading-tight">32 <span class="text-[40px] text-gray-800">million litres</span></h3>
+                        <p class="text-xl md:text-2xl text-gray-700 mt-2 font-medium">of milk collected everyday</p>
+                    </div>
+                    <!-- Horizontal separator line for mobile -->
+                    <hr class="border-gray-400 md:hidden" />
+                    <div>
+                        <h3 class="text-4xl md:text-[50px] font-bold text-amul-red leading-tight">50+ <span class="text-[40px] text-gray-800">products</span></h3>
+                        <p class="text-xl md:text-2xl text-gray-700 mt-2 font-medium">meeting people's needs across categories.</p>
+                    </div>
+                </div>
+                
+                <!-- Column 3 -->
+                <div class="flex flex-col justify-between space-y-12 md:pl-12">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-4xl md:text-[50px] font-bold text-amul-red leading-tight">1 <span class="text-[40px] text-gray-800">billion</span></h3>
+                            <p class="text-xl md:text-2xl text-gray-700 mt-2 font-medium">lives nourished</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <!-- World Map Illustration -->
+                        <div class="w-full max-w-[250px] mb-4">
+                            <img src="red_dotted_map.jpg" alt="World map" class="w-full object-contain mix-blend-multiply" onerror="this.src='https://placehold.co/400x200/e8f1f2/e31837?text=World+Map'">
+                        </div>
+                        <h3 class="text-4xl md:text-[50px] font-bold text-amul-red leading-tight">50+ <span class="text-[40px] text-gray-800">countries</span></h3>
+                        <p class="text-xl md:text-2xl text-gray-700 mt-2 font-medium">across the world buy Amul products</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Curve -->
+            <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none" style="transform: translateY(99%);">
+                <svg class="relative block w-full h-[20px] md:h-[40px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="#e8f1f2"></path>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Product Portfolio Section -->
+        <section class="w-full bg-[#fdf3e7] pt-32 pb-20 px-4 md:px-12 font-sans relative">
+            <h2 class="text-4xl md:text-[40px] font-bold text-[#1f2937] text-center mb-16">Our Product Portfolio</h2>
+            
+            <div id="product-carousel" class="max-w-[1400px] mx-auto flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-hide scroll-smooth" style="scrollbar-width: none; -ms-overflow-style: none;">
+                <!-- Product Cards -->
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_milk.jpg" alt="Milk" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Milk</h3>
+                </div>
+                
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_butter.jpg" alt="Butter" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Butter</h3>
+                </div>
+                
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_cheese.jpg" alt="Cheese" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Cheese</h3>
+                </div>
+                
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_icecream.jpg" alt="Ice cream" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Ice cream</h3>
+                </div>
+                
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_protein.jpg" alt="Protein" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Protein</h3>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_organic.jpg" alt="Organic" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Organic</h3>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_flavoured_milk.jpg" alt="Flavoured Milk" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Flavoured Milk</h3>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] aspect-[4/5] relative rounded-2xl overflow-hidden shadow-xl snap-center group cursor-pointer">
+                    <img src="product_malt.jpg" alt="Malt Beverages" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <h3 class="absolute bottom-6 left-6 text-white text-2xl font-bold">Malt Beverages</h3>
+                </div>
+            </div>
+            
+            <div class="max-w-[1400px] mx-auto mt-4 flex justify-end gap-4 px-4 md:px-0">
+                <button onclick="document.getElementById('product-carousel').scrollBy({left: -350, behavior: 'smooth'})" class="w-12 h-12 rounded-full border-2 border-[#e31837] text-[#e31837] flex items-center justify-center hover:bg-[#e31837] hover:text-white transition shadow-sm"><span class="material-symbols-outlined">chevron_left</span></button>
+                <button onclick="document.getElementById('product-carousel').scrollBy({left: 350, behavior: 'smooth'})" class="w-12 h-12 rounded-full border-2 border-[#e31837] text-[#e31837] flex items-center justify-center hover:bg-[#e31837] hover:text-white transition shadow-sm"><span class="material-symbols-outlined">chevron_right</span></button>
+            </div>
+            
+            <div class="w-full flex justify-center mt-16">
+                <a href="https://amul.com/m/products" target="_blank" class="bg-[#e31837] text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-red-700 transition shadow-lg block">View all products</a>
+            </div>
+        </section>
+
+        <!-- Organic Cashews Section -->
+        <section class="w-full bg-[#f6ecd3] py-24 px-4 md:px-12 font-sans relative overflow-hidden border-t border-[#eedebb]">
+            <div class="max-w-[1300px] mx-auto relative z-10 h-[650px] md:h-[500px]">
+                
+                <!-- Cashew Slide -->
+                <div id="slide-cashew" class="absolute inset-0 flex flex-col md:flex-row items-center justify-between transition-opacity duration-1000 ease-in-out opacity-100">
+                    <!-- Cashew Background Decorations -->
+                    <div class="absolute inset-0 pointer-events-none opacity-60 z-[-1]">
+                        <!-- Left side -->
+                        <img src="cashew_bg.jpg" class="absolute top-[5%] left-[-2%] w-40 h-auto mix-blend-multiply transform -rotate-[30deg]" alt="bg">
+                        <img src="cashew_bg.jpg" class="absolute top-[45%] left-[8%] w-28 h-auto mix-blend-multiply transform rotate-[45deg]" alt="bg">
+                        <img src="cashew_bg.jpg" class="absolute bottom-[5%] left-[25%] w-36 h-auto mix-blend-multiply transform rotate-[15deg]" alt="bg">
+                        
+                        <!-- Center/Right side -->
+                        <img src="cashew_bg.jpg" class="absolute top-[10%] right-[35%] w-32 h-auto mix-blend-multiply transform rotate-[120deg]" alt="bg">
+                        <img src="cashew_bg.jpg" class="absolute top-[40%] right-[-5%] w-48 h-auto mix-blend-multiply transform rotate-[75deg]" alt="bg">
+                        <img src="cashew_bg.jpg" class="absolute bottom-[10%] right-[10%] w-44 h-auto mix-blend-multiply transform -rotate-[45deg]" alt="bg">
+                        <img src="cashew_bg.jpg" class="absolute bottom-[-5%] right-[45%] w-40 h-auto mix-blend-multiply transform rotate-[180deg]" alt="bg">
+                    </div>
+
+                    <!-- Text Content -->
+                    <div class="md:w-1/2 mb-12 md:mb-0 flex flex-col justify-center pl-4 md:pl-8">
+                        <h4 class="text-[22px] font-bold text-[#1f2937] mb-2 font-sans tracking-wide">New faves from Amul</h4>
+                        <h2 class="text-6xl md:text-[80px] font-bold text-[#8a3b3b] leading-none mb-3 font-sans tracking-tight">Organic Cashews</h2>
+                        <h3 class="text-2xl md:text-[34px] font-medium text-[#8a3b3b] mb-8 font-sans">Handpicked • Purest Taste</h3>
+                        <p class="text-[#594a4a] text-lg md:text-[17px] mb-10 max-w-[500px] leading-relaxed font-sans font-medium">
+                            Carefully sourced from Goa, these premium-quality cashews are ideal for healthy snacking, festive gifting, cooking, baking, or adding a delicious crunch to desserts and everyday meals.
+                        </p>
+                        <div>
+                            <button class="bg-[#ea2a2a] text-white px-10 py-3.5 rounded-[100px] font-bold text-lg hover:bg-red-700 transition shadow-[0_8px_15px_rgba(234,42,42,0.3)] inline-block">Know More</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Image -->
+                    <div class="md:w-1/2 flex justify-center items-center relative pr-4 md:pr-16 py-8">
+                        <img src="amul_cashew_kitchen.jpg" alt="Amul Organic Cashews" class="w-[280px] md:w-[380px] aspect-square object-cover rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-4 border-white hover:scale-105 transition-transform duration-500 ease-in-out cursor-pointer" onerror="this.src='https://placehold.co/450x550/fdf6ea/8a3b3b?text=Amul+Organic+Cashews'">
+                    </div>
+                </div>
+
+                <!-- Almond Slide -->
+                <div id="slide-almond" class="absolute inset-0 flex flex-col md:flex-row items-center justify-between transition-opacity duration-1000 ease-in-out opacity-0 pointer-events-none">
+                    <!-- Almond Background Decorations -->
+                    <div class="absolute inset-0 pointer-events-none opacity-60 z-[-1]">
+                        <!-- Left side -->
+                        <img src="almond_bg.jpg" class="absolute top-[8%] left-[2%] w-36 h-auto mix-blend-multiply transform rotate-[15deg]" alt="bg">
+                        <img src="almond_bg.jpg" class="absolute top-[50%] left-[5%] w-24 h-auto mix-blend-multiply transform -rotate-[20deg]" alt="bg">
+                        <img src="almond_bg.jpg" class="absolute bottom-[10%] left-[30%] w-40 h-auto mix-blend-multiply transform rotate-[60deg]" alt="bg">
+                        
+                        <!-- Center/Right side -->
+                        <img src="almond_bg.jpg" class="absolute top-[15%] right-[30%] w-36 h-auto mix-blend-multiply transform -rotate-[45deg]" alt="bg">
+                        <img src="almond_bg.jpg" class="absolute top-[35%] right-[0%] w-44 h-auto mix-blend-multiply transform rotate-[90deg]" alt="bg">
+                        <img src="almond_bg.jpg" class="absolute bottom-[5%] right-[15%] w-32 h-auto mix-blend-multiply transform -rotate-[15deg]" alt="bg">
+                        <img src="almond_bg.jpg" class="absolute bottom-[-10%] right-[50%] w-48 h-auto mix-blend-multiply transform rotate-[135deg]" alt="bg">
+                    </div>
+
+                    <!-- Text Content -->
+                    <div class="md:w-1/2 mb-12 md:mb-0 flex flex-col justify-center pl-4 md:pl-8">
+                        <h4 class="text-[22px] font-bold text-[#1f2937] mb-2 font-sans tracking-wide">New faves from Amul</h4>
+                        <h2 class="text-6xl md:text-[80px] font-bold text-[#8a3b3b] leading-none mb-3 font-sans tracking-tight">Organic Almonds</h2>
+                        <h3 class="text-2xl md:text-[34px] font-medium text-[#8a3b3b] mb-8 font-sans">Crunchy • Premium Quality</h3>
+                        <p class="text-[#594a4a] text-lg md:text-[17px] mb-10 max-w-[500px] leading-relaxed font-sans font-medium">
+                            Sourced from the finest orchards, our organic almonds are packed with nutrition and natural crunch. Perfect for a healthy start to your day or as a delightful snack anytime.
+                        </p>
+                        <div>
+                            <button class="bg-[#ea2a2a] text-white px-10 py-3.5 rounded-[100px] font-bold text-lg hover:bg-red-700 transition shadow-[0_8px_15px_rgba(234,42,42,0.3)] inline-block">Know More</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Image -->
+                    <div class="md:w-1/2 flex justify-center items-center relative pr-4 md:pr-16 py-8">
+                        <img src="amul_almond_kitchen.jpg" alt="Amul Organic Almonds" class="w-[280px] md:w-[380px] aspect-square object-cover rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-4 border-white hover:scale-105 transition-transform duration-500 ease-in-out cursor-pointer" onerror="this.src='https://placehold.co/450x550/fdf6ea/8a3b3b?text=Amul+Organic+Almonds'">
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const slideCashew = document.getElementById('slide-cashew');
+                    const slideAlmond = document.getElementById('slide-almond');
+                    let showCashew = true;
+
+                    setInterval(() => {
+                        showCashew = !showCashew;
+                        if (showCashew) {
+                            slideCashew.classList.remove('opacity-0', 'pointer-events-none');
+                            slideCashew.classList.add('opacity-100');
+                            
+                            slideAlmond.classList.remove('opacity-100');
+                            slideAlmond.classList.add('opacity-0', 'pointer-events-none');
+                        } else {
+                            slideAlmond.classList.remove('opacity-0', 'pointer-events-none');
+                            slideAlmond.classList.add('opacity-100');
+                            
+                            slideCashew.classList.remove('opacity-100');
+                            slideCashew.classList.add('opacity-0', 'pointer-events-none');
+                        }
+                    }, 4000); // changes every 4 seconds
+                });
+            </script>
+        </section>
+
+        <!-- Summer Refreshment Spotlight Banner -->
+        <section class="w-full bg-white py-20 px-4 md:px-12 font-sans relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none" style="background-image: radial-gradient(circle, #f3f4f6 2px, transparent 2px); background-size: 30px 30px;"></div>
+            
+            <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between relative z-10">
+                <!-- Text Content -->
+                <div class="md:w-1/2 mb-16 md:mb-0 text-center md:text-left flex flex-col items-center md:items-start">
+                    <span class="bg-[#e31837] text-white px-5 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider mb-6 inline-block shadow-md">Summer Special</span>
+                    <h2 class="text-5xl md:text-7xl font-extrabold text-[#1f2937] leading-tight mb-6 tracking-tight">Beat the Heat<br>with <span class="text-[#e31837]">Amul Kool</span></h2>
+                    <p class="text-xl text-[#4b5563] mb-10 font-medium max-w-lg leading-relaxed">Refresh yourself this summer with our delicious range of flavoured milk. Kesar, Rose, Elaichi, and more!</p>
+                    <button class="bg-[#e31837] text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-red-700 transition shadow-[0_10px_20px_rgba(227,24,55,0.3)] hover:-translate-y-1 transform duration-300">Explore Flavours</button>
+                </div>
+                
+                <!-- Bottles Image Layout -->
+                <div class="md:w-1/2 w-full flex justify-center items-end gap-2 md:gap-4 mt-10 md:mt-0 cursor-pointer group pb-4">
+                    <!-- Kesar (Center) -->
+                    <img src="kool_kesar_blend.jpg" alt="Amul Kool Kesar" class="h-[320px] md:h-[450px] w-auto z-10 transition-transform duration-700 ease-in-out hover:-translate-y-6 hover:scale-105 object-contain" onerror="this.src='https://placehold.co/250x450/ffc107/ffffff?text=Kesar'">
+                </div>
+            </div>
+        </section>
+
+        <!-- Campaign Video Section -->
+        <section class="w-full bg-[#0a0a0a] py-24 px-4 md:px-12 font-sans relative text-white">
+            <div class="max-w-[1200px] mx-auto text-center mb-12">
+                <span class="text-amul-red uppercase tracking-[0.2em] font-bold text-sm mb-4 block text-[#e31837]">The Amul Story</span>
+                <h2 class="text-4xl md:text-[50px] font-bold leading-tight mb-6">Experience the magic behind every drop.</h2>
+                <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">Watch our latest campaign and discover why millions of farmers and families trust the Taste of India.</p>
+            </div>
+            
+            <div class="max-w-[1000px] mx-auto rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(227,24,55,0.15)] relative group border border-gray-800">
+                <video id="campaign-video" class="w-full h-auto aspect-video object-cover" autoplay loop muted playsinline>
+                    <source src="gemini_generated_video_cf8ef7aa.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <!-- Unmute Button Overlay -->
+                <button onclick="document.getElementById('campaign-video').muted = !document.getElementById('campaign-video').muted; this.querySelector('span').innerText = document.getElementById('campaign-video').muted ? 'volume_off' : 'volume_up'" class="absolute bottom-6 right-6 w-12 h-12 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#e31837] transition z-10 shadow-lg border border-white/20 cursor-pointer">
+                    <span class="material-symbols-outlined">volume_off</span>
+                </button>
+            </div>
+        </section>
+
+
+<!-- How It's Made Timeline -->
+<section class="py-space-xl max-w-7xl mx-auto px-gutter w-full overflow-hidden" id="timeline">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+        <span class="text-label-sm uppercase tracking-widest text-primary font-bold">The Process</span>
+        <h2 class="font-headline-lg text-on-surface mt-space-xs">How It's Made</h2>
+        <p class="font-body-md text-on-surface-variant mt-4">From farm to bottle, discover the journey of Amul Cool Rose.</p>
+    </div>
+
+    <div class="relative max-w-4xl mx-auto">
+        <!-- Vertical Line -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-surface-variant rounded-full hidden md:block"></div>
+
+        <!-- Step 1 -->
+        <div class="relative flex flex-col md:flex-row items-center justify-between mb-16 group">
+            <div class="md:w-5/12 text-center md:text-right md:pr-8 opacity-0 translate-y-10 transition-all duration-700 ease-out timeline-item">
+                <h3 class="font-headline-sm text-primary mb-2">1. Pure Sourcing</h3>
+                <p class="font-body-md text-on-surface-variant">We start with 100% pure, farm-fresh milk collected daily from our trusted dairy cooperatives.</p>
+            </div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-surface border-4 border-primary z-10 flex items-center justify-center group-hover:scale-125 group-hover:bg-primary transition-all duration-300 hidden md:flex shadow-lg shadow-primary/30">
+                <div class="w-2 h-2 rounded-full bg-primary group-hover:bg-surface"></div>
+            </div>
+            <div class="md:w-5/12 hidden md:block"></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="relative flex flex-col md:flex-row items-center justify-between mb-16 group">
+            <div class="md:w-5/12 hidden md:block"></div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-surface border-4 border-tertiary z-10 flex items-center justify-center group-hover:scale-125 group-hover:bg-tertiary transition-all duration-300 hidden md:flex shadow-lg shadow-tertiary/30">
+                <div class="w-2 h-2 rounded-full bg-tertiary group-hover:bg-surface"></div>
+            </div>
+            <div class="md:w-5/12 text-center md:text-left md:pl-8 opacity-0 translate-y-10 transition-all duration-700 ease-out timeline-item">
+                <h3 class="font-headline-sm text-tertiary mb-2">2. Floral Infusion</h3>
+                <p class="font-body-md text-on-surface-variant">Natural, fragrant rose extracts are carefully blended with the milk to create our signature refreshing flavor.</p>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="relative flex flex-col md:flex-row items-center justify-between mb-16 group">
+            <div class="md:w-5/12 text-center md:text-right md:pr-8 opacity-0 translate-y-10 transition-all duration-700 ease-out timeline-item">
+                <h3 class="font-headline-sm text-secondary mb-2">3. Flash Chilling</h3>
+                <p class="font-body-md text-on-surface-variant">The infused milk is instantly flash-chilled to lock in its fresh taste and essential nutrients without preservatives.</p>
+            </div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-surface border-4 border-secondary z-10 flex items-center justify-center group-hover:scale-125 group-hover:bg-secondary transition-all duration-300 hidden md:flex shadow-lg shadow-secondary/30">
+                <div class="w-2 h-2 rounded-full bg-secondary group-hover:bg-surface"></div>
+            </div>
+            <div class="md:w-5/12 hidden md:block"></div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="relative flex flex-col md:flex-row items-center justify-between mb-8 group">
+            <div class="md:w-5/12 hidden md:block"></div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-surface border-4 border-primary-container z-10 flex items-center justify-center group-hover:scale-125 group-hover:bg-primary-container transition-all duration-300 hidden md:flex shadow-lg shadow-primary-container/30">
+                <div class="w-2 h-2 rounded-full bg-primary-container group-hover:bg-surface"></div>
+            </div>
+            <div class="md:w-5/12 text-center md:text-left md:pl-8 opacity-0 translate-y-10 transition-all duration-700 ease-out timeline-item">
+                <h3 class="font-headline-sm text-primary-container mb-2">4. Premium Bottling</h3>
+                <p class="font-body-md text-on-surface-variant">Finally, it is sealed in sterilized, eco-friendly glass bottles, ready to cool you down.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Utility class to make timeline items visible when they scroll into view */
+    .timeline-visible {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+</style>
+
+<script>
+    // Intersection Observer for Timeline Animation
+    document.addEventListener('DOMContentLoaded', () => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('timeline-visible');
+                }
+            });
+        }, { threshold: 0.3 });
+        
+        document.querySelectorAll('.timeline-item').forEach((el) => observer.observe(el));
+    });
+</script>
+
+<!-- Amul Kool Product Grid -->
+<section class="w-full bg-[#f8f9fa] py-20 px-4 md:px-12 font-sans border-t border-gray-200" id="flavors">
+    <div class="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-16">
+        
+        <!-- Item 1 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_kesar.jpg" alt="Kesar Badam" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">Kesar Badam</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_rose.jpg" alt="No Sugar Kesar" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">No Sugar Kesar</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_kesar.jpg" alt="Badam" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">Badam</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 4 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_elaichi.jpg" alt="Elaichi" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">Elaichi</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 5 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_kesar.jpg" alt="Kesar" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">Kesar</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 6 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_rose.jpg" alt="Rose" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">Rose</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 7 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="kool_elaichi.jpg" alt="No Sugar Elaichi" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">No Sugar Elaichi</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+
+        <!-- Item 8 -->
+        <div class="flex flex-col group cursor-pointer">
+            <div class="w-full aspect-[3/4] bg-transparent rounded-2xl flex items-center justify-center mb-4 p-4 overflow-hidden group-hover:-translate-y-2 transition-transform duration-300">
+                <img src="product_malt.jpg" alt="Chocolate" class="w-full h-full object-contain mix-blend-multiply drop-shadow-md" />
+            </div>
+            <div class="flex justify-between items-start px-2">
+                <div>
+                    <h3 class="font-bold text-[#1f2937] text-lg leading-tight">Chocolate</h3>
+                    <p class="text-gray-400 text-sm mt-1">180ml</p>
+                </div>
+                <button class="w-5 h-5 bg-gray-300 text-white rounded-full flex items-center justify-center text-[10px] font-bold font-serif hover:bg-gray-400">i</button>
+            </div>
+        </div>
+        
+    </div>
+</section>
+
+<!-- Customer Testimonials -->
+<section class="bg-surface-container-low py-space-xl my-space-xl">
+<div class="max-w-7xl mx-auto px-gutter">
+<div class="text-center max-w-2xl mx-auto mb-space-xl">
+<span class="text-label-sm uppercase tracking-widest text-primary font-bold">Loved By Millions</span>
+<h2 class="font-headline-lg text-on-surface mt-space-xs">What Our Fans Say</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<div class="bg-surface-container-lowest p-space-xl rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex text-amber-500 gap-space-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-on-surface-variant">"The Amul Cool Rose is my absolute go-to drink after a long, tiring workday. It feels so soothing and tastes authentically like fresh rose petals!"</p>
+</div>
+<div class="flex items-center gap-space-md pt-space-lg">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">P</div>
+<div>
+<h4 class="font-label-md text-on-surface">Priya Sharma</h4>
+<p class="font-body-sm text-on-surface-variant">Food Blogger</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xl rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex text-amber-500 gap-space-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-on-surface-variant">"Nothing beats the heat quite like a chilled bottle of Amul Cool Rose. Perfectly sweet and incredibly refreshing."</p>
+</div>
+<div class="flex items-center gap-space-md pt-space-lg">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold">R</div>
+<div>
+<h4 class="font-label-md text-on-surface">Rahul Verma</h4>
+<p class="font-body-sm text-on-surface-variant">Fitness Enthusiast</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-xl rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex text-amber-500 gap-space-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-on-surface-variant">"My kids love the rose flavor! It's a healthy and delicious alternative to carbonated drinks. Highly recommended!"</p>
+</div>
+<div class="flex items-center gap-space-md pt-space-lg">
+<div class="w-10 h-10 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold">A</div>
+<div>
+<h4 class="font-label-md text-on-surface">Ananya Patel</h4>
+<p class="font-body-sm text-on-surface-variant">Home Maker</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+</div></main><footer class="w-full bg-surface-container-low py-space-xl"><div class="max-w-7xl mx-auto px-gutter flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="font-headline-sm text-primary font-bold">Amul Cool Rose</div><div class="flex items-center gap-space-md"><a class="p-space-sm rounded-full bg-surface-container text-on-surface hover:bg-primary hover:text-on-primary transition-colors" href="#"><span class="material-symbols-outlined">public</span></a><a class="p-space-sm rounded-full bg-surface-container text-on-surface hover:bg-primary hover:text-on-primary transition-colors" href="#"><span class="material-symbols-outlined">share</span></a><a class="p-space-sm rounded-full bg-surface-container text-on-surface hover:bg-primary hover:text-on-primary transition-colors" href="#"><span class="material-symbols-outlined">favorite</span></a></div><p class="text-body-sm text-on-surface-variant">© 2024 Amul Cool. All rights reserved.</p></div></footer>
+
+    <script>
+        const canvas = document.getElementById("hero-lightpass");
+        const context = canvas.getContext("2d");
+        const frameCount = 294;
+        const currentFrame = index => (
+            `frames_new/ezgif-frame-${(index + 1).toString().padStart(3, '0')}.png`
+        );
+
+        const images = [];
+        const amulImages = {
+            frame: 0
+        };
+        let loadedImages = 0;
+        const loader = document.getElementById('loader');
+        const progressText = document.getElementById('progress');
+
+        for (let i = 0; i < frameCount; i++) {
+            const img = new Image();
+            const onLoadOrError = () => {
+                loadedImages++;
+                progressText.innerText = Math.round((loadedImages / frameCount) * 100) + '%';
+                if(loadedImages === frameCount) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                    render();
+                }
+            };
+            img.onload = onLoadOrError;
+            img.onerror = () => {
+                console.error(`Failed to load frame ${i + 1}`);
+                onLoadOrError();
+            };
+            img.src = currentFrame(i);
+            images.push(img);
+        }
+
+        function render() {
+            if(!images[amulImages.frame]) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            context.imageSmoothingEnabled = true;
+            context.imageSmoothingQuality = 'high';
+            
+            const img = images[amulImages.frame];
+            // Use Math.max to make sure the video covers the full screen (no black bars!)
+            const scale = Math.max(canvas.width / (img.width || 800), canvas.height / (img.height || 600));
+            const drawWidth = (img.width || 800) * scale;
+            const drawHeight = (img.height || 600) * scale;
+            const offsetX = (canvas.width - drawWidth) / 2;
+            const offsetY = (canvas.height - drawHeight) / 2;
+            
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        }
+
+        window.addEventListener('resize', render);
+
+        let targetFrame = 0;
+        let currentFrameIndex = 0;
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop;
+            const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollFraction = scrollTop / maxScrollTop;
+            targetFrame = Math.min(
+                frameCount - 1,
+                Math.floor(scrollFraction * frameCount)
+            );
+        });
+
+        function updateFrame() {
+            // Smoothly ease current frame towards the target frame
+            currentFrameIndex += (targetFrame - currentFrameIndex) * 0.1;
+            
+            // Round it to get an integer index for the array
+            const nextFrame = Math.round(currentFrameIndex);
+            
+            // Only re-render if the rounded frame actually changes
+            if (amulImages.frame !== nextFrame) {
+                amulImages.frame = nextFrame;
+                render();
+            }
+            
+            requestAnimationFrame(updateFrame);
+        }
+        
+        // Start the smoothing loop
+        updateFrame();
+    </script>
+</body>
+</html>
